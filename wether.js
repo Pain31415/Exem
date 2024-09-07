@@ -207,6 +207,48 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function handleGeolocation(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        getWeatherByCoords(lat, lon);
+    }
+
+    function handleGeolocationError() {
+        alert('Не вдалося отримати вашу геолокацію. Будь ласка, введіть назву міста вручну.');
+    }
+
+    function getWeatherByCoords(lat, lon) {
+        const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=uk`;
+
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.cod === 200) {
+                    displayCurrentWeather(data);
+                    getForecast(data.name); // Отримання прогнозу
+                    getNearbyCities(data.coord.lat, data.coord.lon);
+                } else {
+                    alert(`Місто не знайдено: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                alert(`Помилка отримання даних: ${error.message}`);
+                console.error('Помилка отримання даних:', error);
+            });
+    }
+
+    // Перевірка наявності підтримки геолокації
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(handleGeolocation, handleGeolocationError);
+    } else {
+        alert('Ваш браузер не підтримує геолокацію. Будь ласка, введіть назву міста вручну.');
+    }
+
     cityInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             const city = cityInput.value.trim();
